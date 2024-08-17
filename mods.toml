@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="[40,)"
+license="All rights reserved"
+
+[[mods]]
+modId="recorder"  # This should match the modId in your @Mod annotation
+version="0.1"
+displayName="Recorder Mod"
+description='''
+Your mod description here.
+'''
+
+[[dependencies.recorder]]
+    modId="forge"
+    mandatory=true
+    versionRange="[40,)"
+    ordering="NONE"
+    side="CLIENT"
+
+[[dependencies.recorder]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.18.2,1.19)"
+    ordering="NONE"
+    side="CLIENT"
