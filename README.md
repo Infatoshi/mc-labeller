@@ -1,7 +1,7 @@
 
 # MC-Labeller
 
-https://github.com/Infatoshi/mc-labeller/assets/showcase.mp4
+![](https://github.com/Infatoshi/mc-labeller/assets/showcase.mp4)
 
 > Note: This project was developed and tested on Ubuntu 22.04 Linux and macOS. The process may differ on Windows.
 
