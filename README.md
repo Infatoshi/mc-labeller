@@ -40,7 +40,7 @@ Download and run the Forge installer from here (https://files.minecraftforge.net
 
 ````bash
 cd server
-wget https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.19.2-43.2.0/forge-1.19.2-43.2.0-installer.jar
+wget https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.18.2-40.2.0/forge-1.18.2-40.2.0-installer.jar
 java -jar forge-1.19.2-43.2.0-installer.jar --installServer
 rm forge-1.19.2-43.2.0-installer.jar
 echo "#!/bin/sh" > start.sh
@@ -53,7 +53,7 @@ sudo ufw allow 25565/tcp
 mv ../server.properties .
 
 # Start the server
-./start.sh```
+./start.sh
 ````
 
 - Once the server boots up, disable fall damage by typing `gamerule fallDamage false` into the server terminal.
