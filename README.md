@@ -20,8 +20,8 @@ I created MC-Labeller as an alternative to projects like Malmo and MineRL, which
 I plan to follow up by using the collected tree mining data to train a Minecraft agent (a deep neural network allowed to interact with the game) to generalize over and mimic human behavior.
 
 ## Setup Instructions
-
-### Pre-setup
+> minecraft version 1.20.1; fabric loader version 0.16.9
+### Pre-setup (linux)
 
 ```bash
 sudo apt update && sudo apt upgrade -y && sudo apt autoremove
@@ -30,93 +30,30 @@ mkdir server
 mkdir -p ~/.minecraft/mods
 ```
 
-### Install Forge
-
-Ensure you have the Minecraft launcher installed with version "1.18.2"
-
-Download and run the Forge installer from here (https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
-
-### Server Setup
-
-````bash
-cd server
-wget https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.18.2-40.2.0/forge-1.18.2-40.2.0-installer.jar
-java -jar forge-1.19.2-43.2.0-installer.jar --installServer
-rm forge-1.19.2-43.2.0-installer.jar
-echo "#!/bin/sh" > start.sh
-echo "java -Xmx4G -Xms4G -jar forge-1.19.2-43.2.0.jar nogui" >> start.sh
-chmod +x start.sh
-echo "eula=true" > eula.txt
-sudo ufw allow 25565/tcp
-
-# Copy favorable server settings
-mv ../server.properties .
-
-# Start the server
-./start.sh
-````
-
-- Once the server boots up, disable fall damage by typing `gamerule fallDamage false` into the server terminal.
-
-### Mod Creator
-
+### Pre-setup (macOS)
 ```bash
-mkdir mod-creator && cd mod-creator
-wget https://maven.minecraftforge.net/net/minecraftforge/forge/1.18.2-40.2.0/forge-1.18.2-40.2.0-mdk.zip
-unzip forge-1.18.2-40.2.0-mdk.zip
-rm forge-1.18.2-40.2.0-mdk.zip
+brew install openjdk@17
 
-# Set up development environment
-./gradlew genEclipseRuns
-./gradlew vscode
-
-# Copy necessary files
-mv ../SimpleMineRLMod.java src/main/com/example/examplemod/
-mv ../mods.toml src/main/resources/META-INF/
-mv ../build.gradle .
-
-# Build the mod
-./gradlew build
-
-# Copy the mod to Minecraft mods folder
-cp build/libs/*.jar ~/.minecraft/mods/
+sudo ln -sfn $(brew --prefix)/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk
+# may need to set environment variables...
+# install fabric and download the fabric api
+wget https://maven.fabricmc.net/net/fabricmc/fabric-installer/1.0.1/fabric-installer-1.0.1.jar
+java -jar fabric-installer-1.0.1.jar
+# download: https://www.curseforge.com/minecraft/mc-mods/fabric-api/files/5383715
+cp fabric-api-0.92.2+1.20.1.jar ~/Library/Application Support/minecraft/mods
 ```
 
-### Python Receiver
-
+## Build the mod
 ```bash
-mkdir python && cd python
-python3 -m venv venv
-source venv/bin/activate
-pip install -r ../requirements.txt
+# in java-to-python (action recorder), run
+./gradlew genSources
+./gradlew build
+
+# then copy the mods from build/libs to your mods folder (.minecraft on linux, ~/Library/Application Support/minecraft/mods on macOS)
+
 ```
 
 ## How to Play
+- J to start recording, K to stop recording
+- soon... L to teleport to a random location in the world (new data sample)
 
-- Ensure the server is running
-
-- Join the server through direct connection (use port 25565) to connect to your local server
-
-- Run the Python script and observe the print statements as you move the mouse, click mouse buttons, and press keyboard buttons
-
-- An OpenCV window will mimic your gameplay
-
-### Current Features
-
-- Press `.` to spawn at a new random location (useful for rapid data collection)
-
-## TODO
-
-- Test keystroke integers, mouse click integers, and mouse movement floats for consistency across Linux and macOS
-
-- Document keyboard mappings (keystrokes are integers by default)
-
-- Address fall damage prevention more elegantly
-
-- Focus on the "getting wood" task/achievement for now
-
-- Optimize performance for fullscreen and smaller MacBook chips
-
-- Implement recording start/stop with [ and ] keys
-
-- Add a feature to delete recently recorded data samples in case of mistakes

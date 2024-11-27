@@ -1,2 +1,7 @@
 .git
 .gradle
+java-to-python/.gradle
+java-to-python/build
+python-to-java/.gradle
+python-to-java/build
+java-to-python/data
