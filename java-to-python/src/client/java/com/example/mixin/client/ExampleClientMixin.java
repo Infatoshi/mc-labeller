@@ -3,6 +3,7 @@ package com.example.mixin.client;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -34,24 +35,32 @@ public class ExampleClientMixin {
 	private ByteArrayOutputStream imageOutputStream;
 	private BufferedOutputStream socketOutputStream;
 	private BufferedImage frameImage;
-	private byte[] previousFrame;
+	private Integer previousFrameHash;
 	private ImageWriter jpegWriter;
 	private ImageWriteParam jpegParams;
+	private byte[] pixelsBytes;
+	private byte[] imgData;
+	private byte[] base64Buffer;
+	private StringBuilder messageBuilder;
 	
 	// Constants
 	private static final int BUFFER_SIZE = 32768; // Increased buffer size
 	private static final int TICK_INTERVAL = 2;
 	private static final int MAX_FRAME_SIZE = 131072; // Increased to 128KB for full res
 	private static final float SCALE = 0.75f; // Adjust this value to change scaling (0.5 = half size)
+	private static final long FRAME_TIME_TARGET = 33; // ~30 FPS
+	private static final int BASE64_BUFFER_SIZE = (MAX_FRAME_SIZE * 4) / 3 + 4; // Base64 expansion factor
 	
 	private long lastFrameTime = 0;
+	private long lastProcessedTime = 0;
 	
 	@Inject(at = @At("HEAD"), method = "render")
 	private void onRender(CallbackInfo info) {
 		long currentTime = System.currentTimeMillis();
-		if (currentTime - lastFrameTime < 16) return;
-		
-		if (++tickCounter % TICK_INTERVAL != 0) return;
+		if (currentTime - lastProcessedTime < FRAME_TIME_TARGET) {
+			return;
+		}
+		lastProcessedTime = currentTime;
 		
 		try {
 			if (!isConnected) {
@@ -66,8 +75,10 @@ public class ExampleClientMixin {
 
 			MinecraftClient client = MinecraftClient.getInstance();
 			Framebuffer framebuffer = client.getFramebuffer();
-			int width = framebuffer.textureWidth;
-			int height = framebuffer.textureHeight;
+			
+			// Get the actual game window dimensions instead of framebuffer dimensions
+			int width = client.getWindow().getFramebufferWidth();
+			int height = client.getWindow().getFramebufferHeight();
 			
 			// Calculate scaled dimensions
 			int scaledWidth = Math.max(1, (int)(width * SCALE));
@@ -75,42 +86,47 @@ public class ExampleClientMixin {
 			
 			if (pixelBuffer == null || pixelBuffer.capacity() < width * height * 4) {
 				pixelBuffer = ByteBuffer.allocateDirect(width * height * 4);
+				pixelsBytes = new byte[width * height * 4];
 				imageOutputStream = new ByteArrayOutputStream(BUFFER_SIZE);
 				frameImage = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_3BYTE_BGR);
+				imgData = ((DataBufferByte) frameImage.getRaster().getDataBuffer()).getData();
 				
 				// Initialize JPEG writer with quality settings
 				jpegWriter = ImageIO.getImageWritersByFormatName("jpg").next();
 				jpegParams = jpegWriter.getDefaultWriteParam();
 				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 				jpegParams.setCompressionQuality(0.6f);
+				base64Buffer = new byte[BASE64_BUFFER_SIZE];
+				messageBuilder = new StringBuilder(BASE64_BUFFER_SIZE + 1);
 			}
 
 			pixelBuffer.clear();
 			framebuffer.beginRead();
-			GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pixelBuffer);
+			
+			// Read from the actual game viewport
+			GL11.glReadBuffer(GL11.GL_FRONT);
+			GL11.glReadPixels(0, 0, width, height, GL12.GL_BGRA, GL11.GL_UNSIGNED_BYTE, pixelBuffer);
+			
 			framebuffer.endRead();
 
-			byte[] pixelsBytes = new byte[width * height * 4];
 			pixelBuffer.get(pixelsBytes);
 			
-			// Calculate center crop offsets
-			int startX = (width - scaledWidth) / 2;
-			int startY = (height - scaledHeight) / 2;
-			
-			// Direct byte array access for faster pixel processing
-			byte[] imgData = ((DataBufferByte) frameImage.getRaster().getDataBuffer()).getData();
-			
-			// Process pixels with scaling and center crop
+			// Process pixels with scaling
+			int widthRatio = (width << 16) / scaledWidth;
+			int heightRatio = (height << 16) / scaledHeight;
+
 			for (int y = 0; y < scaledHeight; y++) {
+				int sourceY = ((height - 1 - ((y * heightRatio) >> 16)) * width) * 4;
+				int targetY = y * scaledWidth * 3;
+				
 				for (int x = 0; x < scaledWidth; x++) {
-					int sourceX = startX + x;
-					int sourceY = startY + y;
-					int sourceIndex = ((sourceY * width) + sourceX) * 4;
-					int targetIndex = (y * scaledWidth + x) * 3;
+					int sourceX = ((x * widthRatio) >> 16) * 4;
+					int sourceIndex = sourceY + sourceX;
+					int targetIndex = targetY + (x * 3);
 					
-					imgData[targetIndex] = pixelsBytes[sourceIndex + 2];     // B
+					imgData[targetIndex] = pixelsBytes[sourceIndex];     // B
 					imgData[targetIndex + 1] = pixelsBytes[sourceIndex + 1]; // G
-					imgData[targetIndex + 2] = pixelsBytes[sourceIndex];     // R
+					imgData[targetIndex + 2] = pixelsBytes[sourceIndex + 2]; // R
 				}
 			}
 
@@ -124,13 +140,15 @@ public class ExampleClientMixin {
 				return;
 			}
 
-			if (previousFrame != null && Arrays.equals(previousFrame, currentFrame)) {
+			int newHash = Arrays.hashCode(currentFrame);
+			if (previousFrameHash != null && newHash == previousFrameHash) {
 				return;
 			}
-			previousFrame = currentFrame;
+			previousFrameHash = newHash;
 
-			String base64Image = Base64.getEncoder().encodeToString(currentFrame);
-			socketOutputStream.write((base64Image + "\n").getBytes());
+			messageBuilder.setLength(0);
+			messageBuilder.append(Base64.getEncoder().encodeToString(currentFrame)).append('\n');
+			socketOutputStream.write(messageBuilder.toString().getBytes());
 			socketOutputStream.flush();
 
 		} catch (IOException e) {

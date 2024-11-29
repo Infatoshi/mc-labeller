@@ -106,8 +106,7 @@ def main():
                             img_data = base64.b64decode(frame_data)
                             img = Image.open(BytesIO(img_data))
                             np_img = np.array(img)
-                            opencv_img = cv2.cvtColor(np_img, cv2.COLOR_RGB2BGR)
-                            opencv_img = cv2.flip(opencv_img, 0)
+                            opencv_img = cv2.cvtColor(np_img, cv2.COLOR_BGR2RGB)
                             
                             # Initialize video writer with first frame dimensions
                             if not video_writer and game_state.streaming:

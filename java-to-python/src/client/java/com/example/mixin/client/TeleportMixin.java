@@ -6,17 +6,10 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.text.Text;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.chunk.ChunkManager;
-import net.minecraft.server.world.ChunkTicketType;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(MinecraftClient.class)
 public class TeleportMixin {
@@ -38,12 +31,13 @@ public class TeleportMixin {
         // Handle P key to release player
         if (isPPressed && !wasPPressed && isHoldingPlayer) {
             isHoldingPlayer = false;
-            client.player.sendMessage(Text.literal("Released from hold position"), false);
+            // client.player.sendMessage(Text.literal("Released from hold position"), false);
         }
         
         // Keep player at HOLD_HEIGHT while waiting
         if (isHoldingPlayer) {
             client.player.setPosition(client.player.getX(), HOLD_HEIGHT, client.player.getZ());
+            client.player.fallDistance = 0; // Reset fall distance while being held
         }
 
         if (isLPressed && !wasLPressed) {
@@ -55,16 +49,11 @@ public class TeleportMixin {
             // Teleport logic
             client.player.setPosition(x, HOLD_HEIGHT, z);
             isHoldingPlayer = true;
-            String message = String.format("Teleported to X: %.2f, Y: %d, Z: %.2f", x, HOLD_HEIGHT, z);
-            client.player.sendMessage(Text.literal(message), false);
+            // String message = String.format("Teleported to X: %.2f, Y: %d, Z: %.2f", x, HOLD_HEIGHT, z);
+            // client.player.sendMessage(Text.literal(message), false);
         }
         
         wasLPressed = isLPressed;
         wasPPressed = isPPressed;
-    }
-
-    @Inject(method = "handleFallDamage(FF)Z", at = @At("HEAD"), cancellable = true)
-    private void onHandleFallDamage(float fallDistance, float damageMultiplier, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(false); // Prevents fall damage
     }
 } 

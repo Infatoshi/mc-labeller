@@ -6,7 +6,8 @@
         "ExampleClientMixin",
 		"MouseInputMixin",
 		"KeyboardInputMixin",
-		"TeleportMixin"
+		"TeleportMixin",
+		"FallDamageMixin"
     ],
     "injectors": {
         "defaultRequire": 1
