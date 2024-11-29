@@ -45,8 +45,8 @@ class GameState:
 
 def main():
     # Create data directories if they don't exist
-    os.makedirs("data/video", exist_ok=True)
-    os.makedirs("data/actions", exist_ok=True)
+    os.makedirs("../data/video", exist_ok=True)
+    os.makedirs("../data/actions", exist_ok=True)
     
     # Set up frame server
     frame_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

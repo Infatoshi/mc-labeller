@@ -1,3 +1,5 @@
+# set a fixed dict with the actions per frame for testing purposes
+
 import socket
 import json
 import time

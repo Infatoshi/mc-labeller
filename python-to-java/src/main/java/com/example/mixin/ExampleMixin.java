@@ -19,9 +19,9 @@ public class ExampleMixin {
 		}
 		
 		MinecraftServer server = (MinecraftServer) (Object) this;
-		server.getPlayerManager().broadcast(
-			Text.literal("Tick Counter: " + tickCounter + "/20"),
-			false
-		);
+		// server.getPlayerManager().broadcast(
+		// 	Text.literal("Tick Counter: " + tickCounter + "/20"),
+		// 	false
+		// );
 	}
 }

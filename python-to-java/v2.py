@@ -1,3 +1,5 @@
+# action dict is based on a prev recorded jsonl file (we want to mimic it exactly)
+
 import socket
 import json
 import time
@@ -39,8 +41,9 @@ def replay_actions(jsonl_path, controller):
             for line_num, line in enumerate(file, 1):
                 try:
                     actions = json.loads(line.strip())
-                    actions['dx'] /= 4
-                    actions['dy'] /= 4
+                    # tune these values to scale the cursor speed properly (so it accurately mimic the human movements)
+                    actions['dx'] /= 4.6
+                    actions['dy'] /= 4.6
                     print(f"Frame {line_num}: {actions}")
                     
                     if not controller.send_actions(actions):
@@ -63,7 +66,7 @@ def replay_actions(jsonl_path, controller):
 controller = MCController()
 try:
     # Replace with your JSONL file path
-    jsonl_path = "/Users/elliotarledge/gen/java-to-python/fabric-example-mod/data/actions/2024-11-27_08_51_01.jsonl"
+    jsonl_path = "/Users/elliotarledge/gen/py/mc-labeller/java-to-python/data/actions/2024-11-28_20_30_32.jsonl"
     replay_actions(jsonl_path, controller)
 finally:
     controller.close()
