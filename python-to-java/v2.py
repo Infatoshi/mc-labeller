@@ -66,7 +66,7 @@ def replay_actions(jsonl_path, controller):
 controller = MCController()
 try:
     # Replace with your JSONL file path
-    jsonl_path = "/Users/elliotarledge/gen/py/mc-labeller/java-to-python/data/actions/2024-11-28_20_30_32.jsonl"
+    jsonl_path = "/Users/elliotarledge/gen/py/mc-labeller/data/actions/2024-11-28_20_50_36.jsonl"
     replay_actions(jsonl_path, controller)
 finally:
     controller.close()

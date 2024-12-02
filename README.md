@@ -57,3 +57,7 @@ cp fabric-api-0.92.2+1.20.1.jar ~/Library/Application Support/minecraft/mods
 - J to start recording, K to stop recording
 - soon... L to teleport to a random location in the world (new data sample)
 
+
+## Neural Nets
+- in `neural-nets`, v1 is for printing out the image shapes you'd ideally feed into the neural net (batchloader). v2 is the training and dataloader template code. we would sub in the training logic, optimizers, seperate NN classes, hyperparams, loss funcs
+
